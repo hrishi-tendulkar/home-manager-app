@@ -8,7 +8,9 @@ More details, documentation, and screenshots will be added incrementally as the 
 
 ---
 
-### More details
+### Product documentation
 - [Product overview](docs/overview.md)
 - [UX principles](docs/ux-principles.md)
+- [System architecture](docs/architecture.md)
+- [Agentic design model](docs/agentic-design.md)
 - [Roadmap](ROADMAP.md)
