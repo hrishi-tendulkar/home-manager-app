@@ -10,5 +10,5 @@ More details, documentation, and screenshots will be added incrementally as the 
 
 ### More details
 - [Product overview](docs/overview.md)
+- [UX principles](docs/ux-principles.md)
 - [Roadmap](ROADMAP.md)
-
