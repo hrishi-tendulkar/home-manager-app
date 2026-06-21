@@ -1,70 +1,59 @@
 # 🏡 Home Manager
 
-> A personal project to simplify running a household — automating the recurring, low-grade decisions a home demands. One assistant, available everywhere, grounded against an actual data model — not a chat over context.
+> A personal app I use daily to run my own household. Tracks recurring services, open items, receipts, and contracts — with an AI assistant that can answer questions because it's reading actual data, not guessing.
 
-**Status:** Personal product. Built for and used daily by one household (mine).
+**Status:** Built for an audience of one (me). In daily use. Not productized.
 
 ![Dashboard](./screenshots/01-dashboard.png)
 
 ---
 
-## The problem
+## Why I built this
 
-A home is a long-running system of contracts, schedules, and small commitments. Lawn every other Thursday. HVAC spring tune-up. The drip on the kitchen faucet ignored since April.
+A house is a long list of small, half-finished things. Lawn every other Thursday. HVAC tune-up in spring. The faucet that's been dripping since April. The receipts for the last three plumbing visits are somewhere in email.
 
-Most home-tracking apps capture *tasks* but not *structure*. Nothing knows "Spotless Home Services" was the vendor that came last Saturday, that gutter cleaning is seasonal, or that the replacement faucet is already in the garage. Three months in, the app is a graveyard of stale checkboxes.
+I tried four apps and three notebooks before building this. The pattern was the same: every one of them turned into a graveyard of stale checkboxes within a few months. The reason was structural — these apps store *tasks*, but they don't actually know anything about my house. Nothing knows that the company that came last Saturday is the same company that did the gutters in October, or that the replacement faucet is already sitting in the garage.
 
-## The wedge
-
-The data model has to come *before* the UI. If a chat assistant is going to answer "how much have I spent on services this year?" or "is the faucet still open?" with real numbers, the schema underneath has to model the home as objects, not strings.
-
-That's the whole bet: **chat is the last mile of an AI product, not the product.**
+I wanted to see what would happen if the underlying data model was right *first*, and the AI assistant was layered on top of that.
 
 ## What it does
 
-- Models a home as five first-class objects: **Home, Services, Open Loops, Records, Assistant**.
-- Tracks recurring services in a 3-tier hierarchy — **Category → Service → Visit** — so spend and cadence roll up from real history.
-- Treats **Open Loops** (Maintenance / Project / Fix) as their own object, with Done, Snooze, and Not-applicable as first-class outcomes — because on any given Saturday the real question is "do I owe this thread my attention this weekend, yes or no."
-- Surfaces one **Assistant**, available everywhere, that has read every Service, Visit, Open Loop, and Record. It answers against the data — not in conversation.
-- Parses receipts and documents into the same model so unstructured inputs become evidence the assistant can cite.
+- Tracks **services** in a three-level hierarchy: Category (e.g. Cleaning) → Service (Spotless Home Services) → Visit (every visit, what was done, what was paid). So spend and frequency roll up from real history.
+- Tracks **open items** — anything in the house that needs attention. Each one can be marked Done, Snoozed, or Not Applicable. The dashboard only shows what actually needs me this weekend.
+- Stores **receipts and records**. Parses them automatically and links them to the right service or item.
+- An **AI assistant** that has read everything above. I can ask *"how much have I spent on services this year?"* and it answers with a real number ($2,929 YTD), broken down by category. Or *"is the kitchen faucet still open?"* and it knows.
 
-![Open loop detail](./screenshots/06-open-loop-kitchen-faucet.png)
-![Assistant grounded in home data](./screenshots/08-ai-chat.png)
+![Open item — kitchen faucet](./screenshots/06-open-loop-kitchen-faucet.png)
+![Assistant answering a question grounded in real data](./screenshots/08-ai-chat.png)
 
-## Key product decisions
+## Decisions I made — and why
 
-**Built a real Category → Service → Visit model instead of a flat task list.**
-*Why:* A flat list captures what to do, not what you've done. After three months it becomes a graveyard. The hierarchy is what lets spend, cadence, and vendor history roll up — and it's what gives the assistant something to be grounded against.
+**Built a real data model (Category → Service → Visit) before the UI.**
+*Why:* A flat checklist captures what to do, not what you've already done. After three months it's just clutter. The hierarchy is what lets spending, frequency, and vendor history actually roll up — and it's what gives the AI assistant something real to answer from.
 
-**Open Loops are a separate first-class object, not a checklist row.**
-*Why:* A home accumulates threads, not to-dos. "Not applicable" and "snooze" are valid outcomes alongside "done." The dashboard should reflect what's actually true.
+**"Open items" are their own thing, separate from tasks.**
+*Why:* A house accumulates threads, not just to-dos. *Not applicable* and *snooze* are valid answers alongside *done* — because on any given Saturday the real question is "do I owe this thing my attention this weekend, yes or no."
 
-**One assistant, everywhere — but the assistant is not the entry point.**
-*Why:* The chat field sits *below* the dashboard. Structured surfaces lead; the assistant supports. Grounding beats conversation.
+**The AI chat is everywhere, but it isn't the entry point.**
+*Why:* The dashboard leads. The chat sits below it. A chat is only useful if the system underneath it actually knows what you're talking about — otherwise it's just a fancy search box.
 
-**Only suggest follow-ups the assistant can actually deliver.**
-*Why:* A wrong suggestion is worse than no suggestion. Each follow-up is a tiny commitment ("I can answer this too"). The assistant only proposes queries it has the data to run.
+**The assistant only suggests follow-up questions it can actually answer.**
+*Why:* A wrong suggestion is worse than no suggestion. Each follow-up is a small promise. The assistant only proposes ones it has the data to answer.
 
-**Collapsed vendors, contracts, and contacts into Services. Refused gamification, streaks, social.**
-*Why:* Earlier drafts separated vendors, contracts, and contacts. Merging them made the assistant dramatically easier to ground. A home manager is for a household, not a feed; the reward is the faucet eventually gets fixed.
+**Merged vendors, contracts, and contacts into one thing: Services.**
+*Why:* Early on these were separate. Merging them made the assistant dramatically more reliable, because there was one less thing it could get confused about. Also: no gamification, no streaks, no social — the reward is the faucet eventually gets fixed.
 
-## Stack
+## How it's built
 
-- **Frontend:** React 18 + Vite + TypeScript, shadcn/ui (Radix), Tailwind, React Router, TanStack Query, react-hook-form + Zod
-- **Backend:** Supabase (Postgres + Auth + Storage) + Edge Functions (Deno/TypeScript)
-- **AI/LLM:** OpenAI `gpt-4o-mini` for parsing/routing, `gpt-4o` for heavier reasoning
-- **Notable architecture:** Function decomposition aligned to cognitive jobs — `route-conversation`, `parse-analytics-query`, `execute-analytics`, `compose-analytics-response`, `parse-log-request`, `parse-document`, `generate-alerts`. Analytics questions run through a **parse → execute → compose** pipeline against the home graph, not freeform chat over context.
+- **Frontend:** React 18 + Vite + TypeScript, shadcn/ui, Tailwind, TanStack Query, react-hook-form + Zod
+- **Backend:** Supabase (Postgres + Auth + Storage) with Edge Functions in Deno
+- **AI:** OpenAI `gpt-4o-mini` for parsing and routing, `gpt-4o` for harder reasoning
+- **Notable:** The assistant doesn't just chat — it routes each question through a small pipeline of functions (one parses the question, one runs it against the data, one writes the response). That way the answers are grounded in real records rather than made up.
 
-## Status
+## What I learned
 
-A personal product, in daily use. Built for an audience of one to test whether grounded structure actually makes an AI assistant feel different. (It does.) Not productized for distribution — it's a working demonstration of the structure-before-chat principle.
-
----
-
-### What I learned
-
-Consumer AI products lose by making the chat *the* product. Without a structured substrate the assistant has nothing to remember, and every question is a fresh conversation. The model and the schema are co-equal design surfaces: the schema constrains what the assistant can confidently say, and the assistant repays the schema by making it browsable.
+Most consumer AI products lose by making the chat *the* product. Without a real data model underneath, the assistant has nothing to remember and every question starts from scratch. The structure underneath and the assistant on top have to be designed together — the structure constrains what the assistant can say with confidence, and the assistant makes the structure useful by letting you ask things you couldn't ask before.
 
 ---
 
-*Source code available on request. Reach out via LinkedIn.*
+*Source code is private. Available on request — reach out via LinkedIn.*
