@@ -1,58 +1,76 @@
-# 🏡 Home Manager
+<!-- TAGLINE -->
 
-> A personal app I use daily to run my own household. Tracks recurring services, open items, receipts, and contracts — with an AI assistant that can answer questions because it's reading actual data, not guessing.
+A web app I built to run my own house. It tracks vendors, recurring services, and the stuff I keep forgetting to fix.
 
-**Status:** Built for an audience of one (me). In daily use. Not productized.
+<!-- BLURB -->
+
+A web app I built for myself to manage my house. It keeps track of vendors I've used, services that come around every few months (HVAC, lawn, gutters), money I've spent, and the small repairs I keep putting off. There's a chat box at the top of the dashboard that's read everything in the app, so I can ask "how much have I spent on cleaning this year?" and get a real answer instead of a guess. I built it because I tried four apps and three notebooks and none of them remembered enough about my house to actually be useful.
+
+<!-- FULL README BELOW -->
+
+# House Manager
+
+A web app I built to run my own house. It tracks vendors, recurring services, and the stuff I keep forgetting to fix.
+
+**Status:** In daily personal use. One user (me). Not deployed publicly.
 
 ![Dashboard](./screenshots/01-dashboard.png)
 
----
-
 ## Why I built this
 
-A house is a long list of small, half-finished things. Lawn every other Thursday. HVAC tune-up in spring. The faucet that's been dripping since April. The receipts for the last three plumbing visits are somewhere in email.
+I own a house. A house generates a constant trickle of small decisions — when was the HVAC last serviced, who did the gutters last fall, did I ever buy that replacement faucet (yes, it's in the garage, it's been there since April).
 
-I tried four apps and three notebooks before building this. The pattern was the same: every one of them turned into a graveyard of stale checkboxes within a few months. The reason was structural — these apps store *tasks*, but they don't actually know anything about my house. Nothing knows that the company that came last Saturday is the same company that did the gutters in October, or that the replacement faucet is already sitting in the garage.
+I tried four apps and three notebooks before building this. They all failed the same way. They were fine at capturing a to-do. They were bad at remembering anything about my house. Nothing knew that "Spotless Home Services" was the same vendor that came last Saturday. Nothing knew gutter cleaning is a seasonal thing and not a one-off. Nothing could tell me how much I'd spent on cleaning this year.
 
-I wanted to see what would happen if the underlying data model was right *first*, and the AI assistant was layered on top of that.
+So I built one. It's the smallest version I'd actually use.
 
 ## What it does
 
-- Tracks **services** in a three-level hierarchy: Category (e.g. Cleaning) → Service (Spotless Home Services) → Visit (every visit, what was done, what was paid). So spend and frequency roll up from real history.
-- Tracks **open items** — anything in the house that needs attention. Each one can be marked Done, Snoozed, or Not Applicable. The dashboard only shows what actually needs me this weekend.
-- Stores **receipts and records**. Parses them automatically and links them to the right service or item.
-- An **AI assistant** that has read everything above. I can ask *"how much have I spent on services this year?"* and it answers with a real number ($2,929 YTD), broken down by category. Or *"is the kitchen faucet still open?"* and it knows.
+- Keeps a list of every recurring service (cleaning, HVAC, landscaping, pest control) with the vendor I use and every visit they've made
+- Tracks "open loops" — the kitchen faucet, the garage door, the thing I keep meaning to call someone about — separately from to-dos, because most of these get snoozed or dropped, not finished
+- Tells me how much I've spent on services this year, broken down by category
+- Has a chat box on the dashboard that's read everything in the app and answers questions against my actual data (not made up)
+- Pulls receipts and service documents into the same structure, so I can search them later
+- Flags things I should pay attention to this weekend on the dashboard so I don't have to remember
 
-![Open item — kitchen faucet](./screenshots/06-open-loop-kitchen-faucet.png)
-![Assistant answering a question grounded in real data](./screenshots/08-ai-chat.png)
+![Services list](./screenshots/03-services-list.png)
+*Categories at the top, individual services nested underneath. Last visit and cost come from the actual visit log.*
 
-## Decisions I made — and why
+![Open Loops](./screenshots/05-open-loops-list.png)
+*Open loops are not to-dos. "Snooze" and "not applicable" are real outcomes.*
 
-**Built a real data model (Category → Service → Visit) before the UI.**
-*Why:* A flat checklist captures what to do, not what you've already done. After three months it's just clutter. The hierarchy is what lets spending, frequency, and vendor history actually roll up — and it's what gives the AI assistant something real to answer from.
+![Chat](./screenshots/08-ai-chat.png)
+*The chat sits below the dashboard, not above it. Answers come from the actual data, with follow-up suggestions the app can actually run.*
 
-**"Open items" are their own thing, separate from tasks.**
-*Why:* A house accumulates threads, not just to-dos. *Not applicable* and *snooze* are valid answers alongside *done* — because on any given Saturday the real question is "do I owe this thing my attention this weekend, yes or no."
+## How I made it
 
-**The AI chat is everywhere, but it isn't the entry point.**
-*Why:* The dashboard leads. The chat sits below it. A chat is only useful if the system underneath it actually knows what you're talking about — otherwise it's just a fancy search box.
+**Built a proper data model (Category → Service → Visit) instead of a flat to-do list.**
+A flat list of tasks turns into a graveyard after three months. The hierarchy is what makes "how much have I spent on cleaning this year" answerable at all.
 
-**The assistant only suggests follow-up questions it can actually answer.**
-*Why:* A wrong suggestion is worse than no suggestion. Each follow-up is a small promise. The assistant only proposes ones it has the data to answer.
+**Made the chat secondary, not the front door.**
+The dashboard is more useful when you open the app on a Saturday morning, so the chat sits below it. If you have a specific question, you scroll down and ask.
 
-**Merged vendors, contracts, and contacts into one thing: Services.**
-*Why:* Early on these were separate. Merging them made the assistant dramatically more reliable, because there was one less thing it could get confused about. Also: no gamification, no streaks, no social — the reward is the faucet eventually gets fixed.
+**Only suggest follow-up questions the app can actually answer.**
+A bad suggestion is worse than no suggestion. The follow-up chips under the chat are limited to queries the app already knows how to run against the data.
+
+**Skipped streaks, badges, and sharing.**
+This is for a household, not a feed. The reward for using it is the faucet eventually gets fixed.
+
+**Used OpenAI instead of running a smaller model myself.**
+Cost decision, not a principled one. `gpt-4o-mini` is cheap enough that I don't think about it for a single-user app.
 
 ## How it's built
 
-- **Frontend:** React 18 + Vite + TypeScript, shadcn/ui, Tailwind, TanStack Query, react-hook-form + Zod
-- **Backend:** Supabase (Postgres + Auth + Storage) with Edge Functions in Deno
-- **AI:** OpenAI `gpt-4o-mini` for parsing and routing, `gpt-4o` for harder reasoning
-- **Notable:** The assistant doesn't just chat — it routes each question through a small pipeline of functions (one parses the question, one runs it against the data, one writes the response). That way the answers are grounded in real records rather than made up.
+- **Frontend:** React, Vite, TypeScript, Tailwind, shadcn/ui
+- **Backend:** Supabase (Postgres + Auth + Storage) with Edge Functions in TypeScript
+- **AI:** OpenAI `gpt-4o-mini` for parsing and routing, `gpt-4o` for the chat answers
+- **Hosting:** Supabase for the backend; runs locally for now
+
+The chat doesn't shove the whole database into a prompt and hope. It runs a small pipeline: one function figures out what you're asking, another runs a real query against the data, a third writes the answer. That's why it can give a real dollar amount instead of inventing one.
 
 ## What I learned
 
-Most consumer AI products lose by making the chat *the* product. Without a real data model underneath, the assistant has nothing to remember and every question starts from scratch. The structure underneath and the assistant on top have to be designed together — the structure constrains what the assistant can say with confidence, and the assistant makes the structure useful by letting you ask things you couldn't ask before.
+The chat is only as good as the data underneath it. My first version had a clever chat and a sloppy schema, and the chat made things up constantly. I rebuilt with the data model first — Category, Service, Visit, Open Loop, Record — and the chat got dramatically more useful overnight without changing the model or the prompts. If you want an assistant to answer real questions about your stuff, the hard part is structuring your stuff, not the assistant.
 
 ---
 
